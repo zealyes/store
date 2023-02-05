@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace属性，用于指定当前的映射文件和哪个接口进行映射，需要指定接口的文件路径，需要标注包的完整路径接口 -->
+<mapper namespace="com.cy.store.mapper.UserMapper">
+    <!--
+        自定义映射规则，resultMap标签完成自定义映射规则的定义。
+        id：标签给这个映射规则分配一个唯一的id值，
+        type；取值是一个类，表示的是数据库中的查询结果与java中哪个实体类进行结果集的映射
+
+    -->
+    <resultMap id="UserEntityMap" type="com.cy.store.entity.User">
+        <!--
+            将表的资源和类的属性不一致的字段进行匹配指定，名称一致的字段可以省略不写。
+            id标签：在定义映射规则时主键不可以省略。
+        -->
+        <id column="uid" property="uid"/>
+        <result column="is_delete" property="isDelete"/>
+        <result column="created_user" property="createdUser"/>
+        <result column="created_time" property="createdTime"/>
+        <result column="modified_user" property="modifiedUser"/>
+        <result column="modified_time" property="modifiedTime"/>
+    </resultMap>
+
+    <!-- id属性：表示映射的接口中方法的名称，直接在标签的内容部来编写SQL语句 -->
+    <!--
+        useGeneratedKeys：开启某个字段的值递增
+        keyProperty：将表中的哪个字段（实体类中的属性名？）当为主键进行递增
+    -->
+    <insert id="insert" useGeneratedKeys="true" keyProperty="uid">
+        INSERT INTO t_user (
+            username,password,salt,phone,email,gender,
+            avatar,is_delete,created_user,created_time,
+            modified_user,modified_time
+        ) VALUES (
+            #{username},#{password},#{salt},#{phone},#{email},#{gender},
+            #{avatar},#{isDelete},#{createdUser},#{createdTime},
+            #{modifiedUser},#{modifiedTime}
+        )
+    </insert>
+    <!--
+        resultType:表示查询的结果类型，只需要指定对应映射类的类型，并且包含完整包接口
+        resultMap: 标签当表的资源和类的对象属性的字段名称不一致时，来自定义查询结果集的映射规则，
+     -->
+    <select id="findByUsername" resultMap="UserEntityMap">
+        SELECT * FROM t_user WHERE username = #{username}
+    </select>
+
+    <!-- 根据uid更新用户的密码：Integer updatePasswordByUid-->
+    <update id="updatePasswordByUid">
+        UPDATE t_user SET password = #{password}, modified_user = #{modifiedUser}, modified_time = #{modifiedTime} WHERE uid = #{uid}
+    </update>
+
+    <!-- 根据用户id查询用户数据：User findByUid(Integer uid) -->
+    <select id="findByUid" resultMap="UserEntityMap">
+        SELECT * FROM t_user WHERE uid = #{uid}
+    </select>
+
+    <!-- 根据uid更新用户个人资料：Integer updateInfoByUid(User user) -->
+    <update id="updateInfoByUid">
+        UPDATE t_user SET
+        <if test="phone != null">phone = #{phone},</if>
+        <if test="email != null">email = #{email},</if>
+        <if test="gender != null">gender = #{gender},</if>
+        modified_user = #{modifiedUser},
+        modified_time = #{modifiedTime}
+        WHERE uid = #{uid}
+    </update>
+
+    <!-- 根据uid更新用户的头像-->
+    <update id="updateAvatarByUid">
+        UPDATE t_user SET
+                          avatar = #{avatar},
+                          modified_user = #{modifiedUser},
+                          modified_time = #{modifiedTime}
+        WHERE uid = #{uid}
+    </update>
+</mapper>
